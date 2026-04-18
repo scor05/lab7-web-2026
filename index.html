@@ -16,11 +16,6 @@
 </head>
 <body>
     <style>
-        .board {
-            display: grid;
-            grid-template-columns: repeat(15,50px);
-            grid-template-rows: repeat(15,50px);
-        }
     </style>
     <div id="root"></div>
     <script type="text/babel">
@@ -45,8 +40,15 @@
                 [{ x:4, y:5 },
                 { x:3, y:5 },
                 { x:2, y:5 }])
-            const [testPoint, uP] = React.useState({x:4,y:5})
             const [direction, setDirection] = React.useState('ArrowRight')
+            
+            const size = 15;
+            const pixels = 40;
+            const boardStyle =  {
+                display: "grid",
+                gridTemplateColumns: `repeat(${size}, ${pixels}px)`,
+                gridTemplateRows: `repeat(${size}, ${pixels}px)`
+            }
             
             React.useEffect(
                 () => {
@@ -70,26 +72,37 @@
                 () => {
                     const i = setInterval(
                         () => {
-                            uP ( (oldPos) => {
-                                    let newPos = { x: null, y: null }
+                            updateSnake( (oldSnake) => {
+                                    const [head, ...body] = oldSnake 
+                                    /*
+                                        Funcion vieja, la dejo aca por si rompo algo
+
+                                    let newHead = { x: null, y: null }
                                     switch(direction) {
                                         case 'ArrowRight':
-                                             newPos = { x: oldPos.x + 1, y: oldPos.y }
+                                             newHead = { x: oldPos.x + 1, y: oldPos.y }
                                              break
                                         case 'ArrowLeft':
-                                            newPos =  { x: oldPos.x - 1, y: oldPos.y }
+                                            newHead =  { x: oldPos.x - 1, y: oldPos.y }
                                             break
                                         case 'ArrowDown':
-                                            newPos =  { x: oldPos.x, y: oldPos.y + 1}
+                                            newHead =  { x: oldPos.x, y: oldPos.y + 1}
                                             break
                                         case 'ArrowUp':
-                                            newPos =  { x: oldPos.x, y: oldPos.y - 1}
+                                            newHead =  { x: oldPos.x, y: oldPos.y - 1}
                                             break
-                                    }
 
-                                    newPos.x = (newPos.x + 14) % 15 + 1
-                                    newPos.y = (newPos.y + 14) % 15 + 1
-                                    return newPos
+                                        newHead.x = ....
+                                        newHead.y = ....
+                                    }
+                                    */
+
+                                    const newHead = (direction === 'ArrowRight') ? { x: (head.x + size-1 + 1) % size + 1, y: (head.y + size-1) % size + 1 }: 
+                                                    (direction === 'ArrowLeft' ) ? { x: (head.x + size-1 - 1) % size + 1, y: (head.y + size-1) % size + 1 }:
+                                                    (direction === 'ArrowDown' ) ? { x: (head.x + size-1) % size + 1, y: (head.y + size-1 + 1) % size + 1 }:
+                                                                                   { x: (head.x + size-1) % size + 1, y: (head.y + size-1 - 1) % size + 1 }
+
+                                    return [newHead, ...oldSnake.slice(0,-1)]
                                 }
                             )
                         }, 400)
@@ -98,8 +111,8 @@
                 }, [direction]) 
 
             return(
-                <main className="board">
-                    <Point x={testPoint.x} y={testPoint.y}/>
+                <main className="board" style={boardStyle}>
+                    {snake.map((obj) => { return(<Point x={obj.x} y={obj.y}/>) })}
                 </main>)
         }
 
