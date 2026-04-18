@@ -16,14 +16,50 @@
 </head>
 <body>
     <style>
+        * { 
+            font-family: 'Tahoma';
+            margin: 0px;
+            padding: 0px;
+        }
+        .parent {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #20102b;
+        }
+
+        h1 {
+            color: #d2e1fa;
+            font-size: 80px;
+            margin-top: -80px;
+            text-shadow: 0 0 5px rgba(0,0,0, 0.5);
+        }
+        
+        h2 {
+            color: #02a7d9;
+            font-size: 35px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #d2e1fa;
+            font-size: 30px;
+            margin-top: 20px;
+            padding-bottom: 100px;
+        }   
     </style>
     <div id="root"></div>
     <script type="text/babel">
         const root = ReactDOM.createRoot(document.getElementById('root'))
+        const size = 15;
+        const pixels = 40;
 
         const Point = ({ x, y }) => {
             const style = {
-                backgroundColor: "green",
+                backgroundColor: "blue",
                 width: "100%",
                 height: "100%",
                 gridColumn: x,
@@ -33,7 +69,35 @@
             return( <div style={style}></div> )
         }
 
+        const Food = ({ x, y }) => {
+            const style = {
+                width: "100%",
+                height: "100%",
+                objectFit: "fill",
+                gridColumn: x,
+                gridRow: y
+            }
+            return( <img src="./assets/apple.png" style={style}/> )
+        }
 
+        const Score = ({ points }) => {
+            return( <h2>Current high score: {points}</h2> )
+        }
+
+        const Board = ({ children }) => {
+            const boardStyle =  {
+                display: "grid",
+                border: '8px solid #4797ff',
+                backgroundImage: 'url("./assets/grass.jpg")',
+                borderRadius: '10px',
+                gridTemplateColumns: `repeat(${size}, ${pixels}px)`,
+                gridTemplateRows: `repeat(${size}, ${pixels}px)`,
+                width: `${size*pixels}px`,
+                height: `${size*pixels}px`
+            }
+
+            return (<main className='board' style={boardStyle}>{children}</main>)
+        }
         
         const Game = () => {
             const [snake, updateSnake] = React.useState(
@@ -41,14 +105,25 @@
                 { x:3, y:5 },
                 { x:2, y:5 }])
             const [direction, setDirection] = React.useState('ArrowRight')
+            const [highScore, setHighScore] = React.useState(0)
+            const [food, updateFood] = React.useState(
+                [{ x:10, y:10 }])
             
-            const size = 15;
-            const pixels = 40;
-            const boardStyle =  {
-                display: "grid",
-                gridTemplateColumns: `repeat(${size}, ${pixels}px)`,
-                gridTemplateRows: `repeat(${size}, ${pixels}px)`
+            let arenaMat = [];
+            for (let i = 0; i < size; i++){
+                arenaMat[i] = [];
+                for (let j = 0; j < size; j++){
+                    arenaMat[i][j] = 0;
+                }
             }
+
+            const setMat = (x, y, val) => {
+                const newMat = arenaMat.map(row => [...row])
+                newMat[x][y] = val
+                return newMat
+            }
+
+            const [arena, updateArena] = React.useState(arenaMat)
             
             React.useEffect(
                 () => {
@@ -74,35 +149,26 @@
                         () => {
                             updateSnake( (oldSnake) => {
                                     const [head, ...body] = oldSnake 
-                                    /*
-                                        Funcion vieja, la dejo aca por si rompo algo
-
-                                    let newHead = { x: null, y: null }
-                                    switch(direction) {
-                                        case 'ArrowRight':
-                                             newHead = { x: oldPos.x + 1, y: oldPos.y }
-                                             break
-                                        case 'ArrowLeft':
-                                            newHead =  { x: oldPos.x - 1, y: oldPos.y }
-                                            break
-                                        case 'ArrowDown':
-                                            newHead =  { x: oldPos.x, y: oldPos.y + 1}
-                                            break
-                                        case 'ArrowUp':
-                                            newHead =  { x: oldPos.x, y: oldPos.y - 1}
-                                            break
-
-                                        newHead.x = ....
-                                        newHead.y = ....
-                                    }
-                                    */
 
                                     const newHead = (direction === 'ArrowRight') ? { x: (head.x + size-1 + 1) % size + 1, y: (head.y + size-1) % size + 1 }: 
                                                     (direction === 'ArrowLeft' ) ? { x: (head.x + size-1 - 1) % size + 1, y: (head.y + size-1) % size + 1 }:
                                                     (direction === 'ArrowDown' ) ? { x: (head.x + size-1) % size + 1, y: (head.y + size-1 + 1) % size + 1 }:
                                                                                    { x: (head.x + size-1) % size + 1, y: (head.y + size-1 - 1) % size + 1 }
+                                    
 
-                                    return [newHead, ...oldSnake.slice(0,-1)]
+                                    for (const f of food) {
+                                        if (f.x === newHead.x && f.y === newHead.y) {
+                                            oldSnake.push(newHead)
+                                            setHighScore(curr => curr+1)
+                                        }
+                                    }
+                                    
+                                    const newSnake = [newHead, ...oldSnake.slice(0,-1)]
+
+                                    for (const node of newSnake){
+                                        updateArena(setMat(node.x,node.y,1))
+                                    }
+                                    return newSnake 
                                 }
                             )
                         }, 400)
@@ -111,9 +177,16 @@
                 }, [direction]) 
 
             return(
-                <main className="board" style={boardStyle}>
-                    {snake.map((obj) => { return(<Point x={obj.x} y={obj.y}/>) })}
-                </main>)
+                <div className="parent">
+                    <h1>React-ive Snake</h1>
+                    <Score points={highScore}/>
+                    <p> Press the button below to begin your very own experience of the great Snake game made in React </p>
+                    <Board>
+                        {food.map((obj, i) => { return(<Food key={i} x={obj.x} y={obj.y}/>) })}
+                        {snake.map((obj, i) => { return(<Point key={i} x={obj.x} y={obj.y}/>) })}
+                    </Board>
+                </div>
+            )
         }
 
         root.render(<Game/>)
