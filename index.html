@@ -1,0 +1,110 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React-ive Snake</title>
+
+    <link rel="icon" href="data:,">
+
+    <!-- React & ReactDOM CDN -->
+    <!-- No sé por qué no me reconoce reactdom 19, le puse react 18  -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel (to use JSX in browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15,50px);
+            grid-template-rows: repeat(15,50px);
+        }
+    </style>
+    <div id="root"></div>
+    <script type="text/babel">
+        const root = ReactDOM.createRoot(document.getElementById('root'))
+
+        const Point = ({ x, y }) => {
+            const style = {
+                backgroundColor: "green",
+                width: "100%",
+                height: "100%",
+                gridColumn: x,
+                gridRow: y
+            }
+            
+            return( <div style={style}></div> )
+        }
+
+
+        
+        const Game = () => {
+            const [snake, updateSnake] = React.useState(
+                [{ x:4, y:5 },
+                { x:3, y:5 },
+                { x:2, y:5 }])
+            const [testPoint, uP] = React.useState({x:4,y:5})
+            const [direction, setDirection] = React.useState('ArrowRight')
+            
+            React.useEffect(
+                () => {
+                    const handleDirection = (k) => {
+                        if (k.key === 'ArrowRight' && direction != 'ArrowLeft'){
+                            setDirection('ArrowRight')
+                        } else if (k.key === 'ArrowLeft' && direction != 'ArrowRight'){
+                            setDirection('ArrowLeft')
+                        } else if (k.key === 'ArrowUp' && direction != 'ArrowDown'){
+                            setDirection('ArrowUp')
+                        } else if (k.key === 'ArrowDown' && direction != 'ArrowUp'){
+                            setDirection('ArrowDown')
+                        }
+                    }
+
+                    window.addEventListener("keydown", handleDirection)
+                    return () => window.removeEventListener("keydown", handleDirection)
+            }, [direction])
+
+            React.useEffect(
+                () => {
+                    const i = setInterval(
+                        () => {
+                            uP ( (oldPos) => {
+                                    let newPos = { x: null, y: null }
+                                    switch(direction) {
+                                        case 'ArrowRight':
+                                             newPos = { x: oldPos.x + 1, y: oldPos.y }
+                                             break
+                                        case 'ArrowLeft':
+                                            newPos =  { x: oldPos.x - 1, y: oldPos.y }
+                                            break
+                                        case 'ArrowDown':
+                                            newPos =  { x: oldPos.x, y: oldPos.y + 1}
+                                            break
+                                        case 'ArrowUp':
+                                            newPos =  { x: oldPos.x, y: oldPos.y - 1}
+                                            break
+                                    }
+
+                                    newPos.x = (newPos.x + 14) % 15 + 1
+                                    newPos.y = (newPos.y + 14) % 15 + 1
+                                    return newPos
+                                }
+                            )
+                        }, 400)
+
+                    return () => clearInterval(i)
+                }, [direction]) 
+
+            return(
+                <main className="board">
+                    <Point x={testPoint.x} y={testPoint.y}/>
+                </main>)
+        }
+
+        root.render(<Game/>)
+
+    </script>
+</body>
+</html>
