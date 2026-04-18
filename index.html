@@ -34,8 +34,38 @@
         h1 {
             color: #d2e1fa;
             font-size: 80px;
-            margin-top: -80px;
-            text-shadow: 0 0 5px rgba(0,0,0, 0.5);
+            margin-top: -40px;
+            text-shadow: 0 0 5px rgba(0,0,0, 0.8);
+        }
+
+        button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 30px;
+            border: 0px;
+            font-size: 35px;
+            width: 250px;
+            height: 75px;
+            margin-top: -70px;
+            margin-bottom: 30px;
+        }
+
+        .pause { 
+            background-color: #d2e1fa;
+            color: #4797ff;
+        }
+
+        .start, .resume {
+            background-color: #4797ff;
+            color: #d2e1fa;
+        }
+
+        #mainArea {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         
         h2 {
@@ -44,11 +74,13 @@
             margin-top: 10px;
             margin-bottom: 10px;
         }
+
         p {
             color: #d2e1fa;
             font-size: 30px;
             margin-top: 20px;
             padding-bottom: 100px;
+            text-align: center;
         }   
     </style>
     <div id="root"></div>
@@ -84,12 +116,43 @@
             return( <h2>Current high score: {points}</h2> )
         }
 
+        const PauseScreen = () => {
+            const style = {
+                display: "flex",
+                border: "8px solid #4797ff",
+                backgroundImage: 'url("./assets/pause.jpg")',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                borderRadius: "20px",
+                width: `${size*pixels}px`,
+                height: `${size*pixels}px`
+            }
+
+            return (<main className='pause' style={style}/>)
+        }
+
+        const DeathScreen = () => {
+            const style = {
+                display: "flex",
+                border: "8px solid #4797ff",
+                backgroundImage: 'url("./assets/deathScreen.webp")',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                borderRadius: "20px",
+                width: `${size*pixels}px`,
+                height: `${size*pixels}px`
+            }
+
+            return (<main className='death' style={style}/>)
+        }
+
+
         const Board = ({ children }) => {
             const boardStyle =  {
                 display: "grid",
                 border: '8px solid #4797ff',
                 backgroundImage: 'url("./assets/grass.jpg")',
-                borderRadius: '10px',
+                borderRadius: '20px',
                 gridTemplateColumns: `repeat(${size}, ${pixels}px)`,
                 gridTemplateRows: `repeat(${size}, ${pixels}px)`,
                 width: `${size*pixels}px`,
@@ -100,47 +163,55 @@
         }
         
         const Game = () => {
-            const [snake, updateSnake] = React.useState(
-                [{ x:4, y:5 },
-                { x:3, y:5 },
-                { x:2, y:5 }])
-            const [direction, setDirection] = React.useState('ArrowRight')
+            const [snake, updateSnake] = React.useState([])
+            const [food, updateFood] = React.useState([])
+            const [emptySpaces, setEmptySpaces] = React.useState([])
+            const [direction, setDirection] = React.useState('nil')
+            const [prevDirection, setPrevDirection] = React.useState('nil')
             const [highScore, setHighScore] = React.useState(0)
+            const [gameState, setGameState] = React.useState('InitialLoad')
+            const [speed, setSpeed] = React.useState(400)
 
-            let boardSpaces = []
-            for (let i = 0; i < size; i++) {
-                for (let j = 0; j < size; j++) {
-                    boardSpaces.push({ x:i+1, y:j+1 })
+            const generateBoard = () => {
+                updateSnake([{x:4, y:5}, {x:3, y:5}, {x:2,y:5}])
+
+                let boardSpaces = []
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        boardSpaces.push({ x:i+1, y:j+1 })
+                    }
                 }
+
+                boardSpaces = boardSpaces.filter( (obj) => {
+                    for (const s of snake) {
+                        if (s.x === obj.x && s.y === obj.y) { return false }
+                    }
+                    return true
+                })
+
+                const startingFood = []
+                for (let i = 0; i < 3; i++){
+                    const randNum = Math.floor(Math.random() * boardSpaces.length)
+                    startingFood[i] = boardSpaces[randNum] 
+                    boardSpaces.splice(randNum, 1)
+                }
+
+                updateFood(startingFood)
+                setEmptySpaces(boardSpaces)
             }
 
-           boardSpaces = boardSpaces.filter( (obj) => {
-                for (const s of snake) {
-                    if (s.x === obj.x && s.y === obj.y) { return false }
-                }
-                return true
-            })
-
-            const startingFood = []
-            for (let i = 0; i < 3; i++){
-                const randNum = Math.floor(Math.random() * boardSpaces.length)
-                startingFood[i] = boardSpaces[randNum] 
-                boardSpaces.splice(randNum, 1)
-            }
-
-            const [food, updateFood] = React.useState(startingFood)
-
-            const removeFood = (rX, rY, sX, sY) => {
+            const removeFood = (rX, rY, nX, nY) => {
                 const temp = [...food]
                 for (let i = 0; i < temp.length; i++){
                     if (temp[i].x === rX && temp[i].y === rY){
-                        temp[i] = { x: sX, y: sY }
+                        temp[i] = { x: nX, y: nY }
                     }
                 }
                 return temp
             }
 
-            const [emptySpaces, setEmptySpaces] = React.useState(boardSpaces)
+            // effect sin nada ejecuta solo una vez on load
+            React.useEffect( () => { generateBoard() }, [])
             
             React.useEffect(
                 () => {
@@ -162,58 +233,82 @@
 
             React.useEffect(
                 () => {
-                    const i = setInterval(
-                        () => {
-                            updateSnake( (oldSnake) => {
-                                    const [head, ...body] = oldSnake 
+                    if (gameState === 'Alive') {
+                        const i = setInterval(
+                            () => {
+                                updateSnake( (oldSnake) => {
+                                        const [head, ...body] = oldSnake 
 
-                                    const newHead = (direction === 'ArrowRight') ? { x: (head.x + size-1 + 1) % size + 1, y: (head.y + size-1) % size + 1 }: 
-                                                    (direction === 'ArrowLeft' ) ? { x: (head.x + size-1 - 1) % size + 1, y: (head.y + size-1) % size + 1 }:
-                                                    (direction === 'ArrowDown' ) ? { x: (head.x + size-1) % size + 1, y: (head.y + size-1 + 1) % size + 1 }:
-                                                                                   { x: (head.x + size-1) % size + 1, y: (head.y + size-1 - 1) % size + 1 }
-                                    
+                                        const newHead = (direction === 'ArrowRight') ? { x: (head.x + size-1 + 1) % size + 1, y: (head.y + size-1) % size + 1 }: 
+                                                        (direction === 'ArrowLeft' ) ? { x: (head.x + size-1 - 1) % size + 1, y: (head.y + size-1) % size + 1 }:
+                                                        (direction === 'ArrowDown' ) ? { x: (head.x + size-1) % size + 1, y: (head.y + size-1 + 1) % size + 1 }:
+                                                                                       { x: (head.x + size-1) % size + 1, y: (head.y + size-1 - 1) % size + 1 }
+                                        
 
-                                    const newSnake = [newHead, ...oldSnake.slice(0,-1)]
+                                        const newSnake = [newHead, ...oldSnake.slice(0,-1)]
 
-                                    for (const f of food) {
-                                        if (f.x === newHead.x && f.y === newHead.y) {
-                                            newSnake.push(newHead)
-                                            setHighScore(curr => curr+1)
-                                            const randSpot = emptySpaces[Math.floor(Math.random() * emptySpaces.length)]
-                                            updateFood(removeFood(f.x,f.y,randSpot.x,randSpot.y))
+                                        for (const f of food) {
+                                            if (f.x === newHead.x && f.y === newHead.y) {
+                                                newSnake.push(newHead)
+                                                setHighScore(curr => curr+1)
+                                                const randSpot = emptySpaces[Math.floor(Math.random() * emptySpaces.length)]
+                                                updateFood(removeFood(f.x,f.y,randSpot.x,randSpot.y))
+                                            }
                                         }
-                                    }
 
-                                   setEmptySpaces(
-                                        (oldSpaces) => {
-                                            return oldSpaces.filter((obj) => {
-                                                for (const f of food) {
-                                                    if (f.x === obj.x && f.y === obj.y) { return false }
-                                                }
-                                                for (const s of newSnake) {
-                                                    if (s.x === obj.x && s.y === obj.y) { return false }
-                                                }
-                                                return true
+                                       setEmptySpaces(
+                                            (oldSpaces) => {
+                                                return oldSpaces.filter((obj) => {
+                                                    for (const f of food) {
+                                                        if (f.x === obj.x && f.y === obj.y) { return false }
+                                                    }
+                                                    for (const s of newSnake) {
+                                                        if (s.x === obj.x && s.y === obj.y) { return false }
+                                                    }
+                                                    return true
+                                            })
                                         })
-                                    })
 
-                                    return newSnake 
-                                }
-                            )
-                        }, 400)
+                                        return newSnake 
+                                    }
+                                )
+                            }, speed)
 
-                    return () => clearInterval(i)
+                        return () => clearInterval(i)
+                    }
                 }, [direction, food]) 
 
-            return(
+                return(
                 <div className="parent">
                     <h1>React-ive Snake</h1>
                     <Score points={highScore}/>
-                    <p> Press the button below to begin your very own experience of the great Snake game made in React </p>
-                    <Board>
-                        {food.map((obj, i) => { return(<Food key={i} x={obj.x} y={obj.y}/>) })}
-                        {snake.map((obj, i) => { return(<Point key={i} x={obj.x} y={obj.y}/>) })}
-                    </Board>
+                    <p> Press the button below to begin your very own experience of the great Snake game made in React.<br/><br/>Use the arrow keys to move around! </p>
+                    {
+                        gameState === 'InitialLoad' ? (
+                            <div id="mainArea">
+                                <button onClick={() => {setGameState('Alive'); setDirection('ArrowRight')}} className="start">Start Game!</button>
+                                <Board></Board>
+                            </div>
+                        ) : gameState === 'Pause' ? (
+                            <div id="mainArea">
+                                <button onClick={() => {setGameState('Alive'); setDirection(prevDirection)}} className="resume">Resume</button>
+                                <PauseScreen />
+                            </div>
+                        ) : gameState === 'Dead' ? (
+                            <div id="mainArea">
+                                <button onClick={() => { generateBoard(); setGameState('Alive'); setDirection('ArrowRight') }} className="start">Start</button>
+                                <DeathScreen />
+                            </div>
+                        ) : (
+                            <div id="mainArea">
+                                <button onClick={() => {setGameState('Pause'); setPrevDirection(direction); setDirection('nil')}} className="pause">Pause</button>
+                                <Board>
+                                    {food.map((obj, i) => { return(<Food key={i} x={obj.x} y={obj.y}/>) })}
+                                    {snake.map((obj, i) => { return(<Point key={i} x={obj.x} y={obj.y}/>) })}
+                                </Board>
+                            </div>
+                        )
+                    }
                 </div>
             )
         }
