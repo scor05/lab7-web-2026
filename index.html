@@ -107,9 +107,22 @@
             const [direction, setDirection] = React.useState('ArrowRight')
             const [highScore, setHighScore] = React.useState(0)
             const [food, updateFood] = React.useState(
-                [{ x:10, y:10 }])
+                [{ x:6, y:5 }])
+
+            const removeFood = (rX, rY, sX, sY) => {
+                const temp = [...food]
+                for (let i = 0; i < temp.length; i++){
+                    if (temp[i].x === rX && temp[i].y === rY){
+                        temp[i] = { x: sX, y: sY }
+                    }
+                }
+                return temp
+            }
             
-            let arenaMat = [];
+           /*
+           si funciona esto pero es muy ineficiente creo
+
+           let arenaMat = [];
             for (let i = 0; i < size; i++){
                 arenaMat[i] = [];
                 for (let j = 0; j < size; j++){
@@ -124,7 +137,16 @@
             }
 
             const [arena, updateArena] = React.useState(arenaMat)
-            
+            */
+
+            // const [emptySpaces, setEmptySpaces] = React.useState([])
+
+            /*
+            const reassignSpace = (x,y,val) => {
+                return [...emptySpaces][x].splice(y,0,val)
+            }
+            */
+
             React.useEffect(
                 () => {
                     const handleDirection = (k) => {
@@ -155,19 +177,36 @@
                                                     (direction === 'ArrowDown' ) ? { x: (head.x + size-1) % size + 1, y: (head.y + size-1 + 1) % size + 1 }:
                                                                                    { x: (head.x + size-1) % size + 1, y: (head.y + size-1 - 1) % size + 1 }
                                     
+                                    let emptySpaces = []
+                                    for (let i = 0; i < size; i++) {
+                                        emptySpaces[i] = []
+                                        for (let j = 0; j < size; j++) {
+                                            emptySpaces[i][j] = { x:i+1, y:j+1 }
+                                        }
+                                    }
+
+                                   emptySpaces = emptySpaces.filter( (obj) => {
+                                        for (const f of food) {
+                                            if (f.x === obj.x && f.y === obj.y) { return false }
+                                        }
+                                        for (const s of oldSnake) {
+                                            if (s.x === obj.x && s.y === obj.y) { return false }
+                                        }
+                                        return true
+                                    })
+
+                                    const newSnake = [newHead, ...oldSnake.slice(0,-1)]
 
                                     for (const f of food) {
                                         if (f.x === newHead.x && f.y === newHead.y) {
-                                            oldSnake.push(newHead)
+                                            newSnake.push(newHead)
                                             setHighScore(curr => curr+1)
+                                            const randNum = Math.floor(Math.random() * emptySpaces.length)
+                                            const randSpot = emptySpaces[randNum][randNum]
+                                            updateFood(removeFood(f.x,f.y,randSpot.x,randSpot.y))
                                         }
                                     }
-                                    
-                                    const newSnake = [newHead, ...oldSnake.slice(0,-1)]
 
-                                    for (const node of newSnake){
-                                        updateArena(setMat(node.x,node.y,1))
-                                    }
                                     return newSnake 
                                 }
                             )
