@@ -206,6 +206,57 @@
     <script type="text/babel">
         const root = ReactDOM.createRoot(document.getElementById('root'))
         const pixels = 40;
+        
+        const Head = ({ x, y, dir }) => {
+            const orientation = (dir === 'ArrowRight') ? '270deg' :
+                                (dir === 'ArrowLeft') ? '90deg' :
+                                (dir === 'ArrowUp') ? '180deg' : '0deg'
+            const style = {
+                width: "100%",
+                height: "100%",
+                backgroundImage: 'url("./assets/snakeHead.png")',
+                backgroundSize: "cover",
+                gridColumn: x,
+                gridRow: y,
+                rotate: orientation 
+            }
+
+            return ( <div style={style}></div> )
+        }
+
+        const FirstBody = ({ x, y, head }) => {
+            const orientation = (head.x > x) ? '0 30px 30px 0' :
+                                (head.x < x) ? '30px 0 0 30px' : 
+                                (head.y > y) ? '0 0 30px 30px' : '30px 30px 0 0'
+            const style = {
+                width: "100%",
+                height: "100%",
+                backgroundColor: "green",
+                gridColumn: x,
+                gridRow: y,
+                borderRadius: orientation
+            }
+
+            return (<div style={style}></div>)
+        }
+
+
+        const Tail = ({ x, y, next }) => {
+            const orientation = (next.x > x) ? '30px 0 0 30px' :
+                                (next.x < x) ? '0 30px 30px 0' : 
+                                (next.y > y) ? '30px 30px 0 0' : '0 0 30px 30px'
+
+            const style = {
+                width: "100%",
+                height: "100%",
+                backgroundColor: "green",
+                gridColumn: x,
+                gridRow: y,
+                borderRadius: orientation
+            }
+
+            return (<div style={style}></div>)
+        }
 
         const Point = ({ x, y }) => {
             const style = {
@@ -525,7 +576,18 @@
                                 <div className="boardDiv">
                                     <Board size={size}>
                                         {food.map((obj, i) => { return(<Food key={i} x={obj.x} y={obj.y}/>) })}
-                                        {snake.map((obj, i) => { return(<Point key={i} x={obj.x} y={obj.y}/>) })}
+                                        {snake.map(
+                                            (obj, i) => { 
+                                                if (i === 0) {
+                                                    return(<Head key={i} x={obj.x} y={obj.y} dir={direction}/>) 
+                                                } else if (i === 1) {
+                                                    return(<FirstBody key={i} x={obj.x} y={obj.y} head={snake[0]}/>)
+                                                } else if (i === snake.length - 1) {
+                                                    return(<Tail key={i} x={obj.x} y={obj.y} next={snake[snake.length-2]}/>)
+                                                } else {
+                                                    return(<Point key={i} x={obj.x} y={obj.y}/>) 
+                                                }
+                                            })}
                                     </Board>
                                 </div>
                             </div>
