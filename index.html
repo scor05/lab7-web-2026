@@ -168,6 +168,7 @@
             const [emptySpaces, setEmptySpaces] = React.useState([])
             const [direction, setDirection] = React.useState('nil')
             const [prevDirection, setPrevDirection] = React.useState('nil')
+            const [prevHighScore, setPrevHighScore] = React.useState(0)
             const [highScore, setHighScore] = React.useState(0)
             const [gameState, setGameState] = React.useState('InitialLoad')
             const [speed, setSpeed] = React.useState(400)
@@ -210,6 +211,47 @@
                 return temp
             }
 
+            const calculateSnake = (oldSnake) => {
+                const [head, ...body] = oldSnake 
+
+                const newHead = (direction === 'ArrowRight') ? { x: head.x + 1, y: head.y }: 
+                                (direction === 'ArrowLeft' ) ? { x: head.x - 1, y: head.y }:
+                                (direction === 'ArrowDown' ) ? { x: head.x, y: head.y + 1 }:
+                                                               { x: head.x, y: head.y - 1}
+
+                if (newHead.x > 15 || newHead.x < 1 || newHead.y > 15 || newHead.y < 1) { setGameState('Dead') }
+                let newSnake = []
+                let ateFood = false
+                
+                for (const f of food) {
+                    if (f.x === newHead.x && f.y === newHead.y) {
+                        ateFood = true
+                        newSnake = [newHead, ...oldSnake]
+                        setHighScore(curr => curr+1)
+                        const randSpot = emptySpaces[Math.floor(Math.random() * emptySpaces.length)]
+                        updateFood(removeFood(f.x,f.y,randSpot.x,randSpot.y))
+                    }
+                }
+
+                if (!ateFood) { newSnake = [newHead, ...oldSnake.slice(0,-1)] }
+
+               setEmptySpaces(
+                    (oldSpaces) => {
+                        return oldSpaces.filter((obj) => {
+                            for (const f of food) {
+                                if (f.x === obj.x && f.y === obj.y) { return false }
+                            }
+                            for (const s of newSnake) {
+                                if (s.x === obj.x && s.y === obj.y) { return false }
+                            }
+                            return true
+                    })
+                })
+
+
+                return newSnake 
+            }
+
             // effect sin nada ejecuta solo una vez on load
             React.useEffect( () => { generateBoard() }, [])
             
@@ -236,52 +278,27 @@
                     if (gameState === 'Alive') {
                         const i = setInterval(
                             () => {
-                                updateSnake( (oldSnake) => {
-                                        const [head, ...body] = oldSnake 
 
-                                        const newHead = (direction === 'ArrowRight') ? { x: (head.x + size-1 + 1) % size + 1, y: (head.y + size-1) % size + 1 }: 
-                                                        (direction === 'ArrowLeft' ) ? { x: (head.x + size-1 - 1) % size + 1, y: (head.y + size-1) % size + 1 }:
-                                                        (direction === 'ArrowDown' ) ? { x: (head.x + size-1) % size + 1, y: (head.y + size-1 + 1) % size + 1 }:
-                                                                                       { x: (head.x + size-1) % size + 1, y: (head.y + size-1 - 1) % size + 1 }
-                                        
+                                const newSnake = calculateSnake(snake)
+                                updateSnake(newSnake)
+                                const [h, ...body] = newSnake
+                                for (const s of body){ 
+                                    if (h.x === s.x && h.y === s.y) { setGameState('Dead') }; 
+                                }
 
-                                        const newSnake = [newHead, ...oldSnake.slice(0,-1)]
-
-                                        for (const f of food) {
-                                            if (f.x === newHead.x && f.y === newHead.y) {
-                                                newSnake.push(newHead)
-                                                setHighScore(curr => curr+1)
-                                                const randSpot = emptySpaces[Math.floor(Math.random() * emptySpaces.length)]
-                                                updateFood(removeFood(f.x,f.y,randSpot.x,randSpot.y))
-                                            }
-                                        }
-
-                                       setEmptySpaces(
-                                            (oldSpaces) => {
-                                                return oldSpaces.filter((obj) => {
-                                                    for (const f of food) {
-                                                        if (f.x === obj.x && f.y === obj.y) { return false }
-                                                    }
-                                                    for (const s of newSnake) {
-                                                        if (s.x === obj.x && s.y === obj.y) { return false }
-                                                    }
-                                                    return true
-                                            })
-                                        })
-
-                                        return newSnake 
-                                    }
-                                )
+                                if (highScore > prevHighScore) {
+                                    setPrevHighScore(highScore)
+                                }
                             }, speed)
 
                         return () => clearInterval(i)
                     }
-                }, [direction, food]) 
+                }, [direction, food, snake]) 
 
                 return(
                 <div className="parent">
                     <h1>React-ive Snake</h1>
-                    <Score points={highScore}/>
+                    <Score points={(highScore > prevHighScore) ? highScore : prevHighScore}/>
                     <p> Press the button below to begin your very own experience of the great Snake game made in React.<br/><br/>Use the arrow keys to move around! </p>
                     {
                         gameState === 'InitialLoad' ? (
