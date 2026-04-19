@@ -26,16 +26,17 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
+            gap: 20px;
             background-color: #20102b;
         }
 
         h1 {
             color: #d2e1fa;
             font-size: 80px;
-            margin-top: -40px;
             text-shadow: 0 0 5px rgba(0,0,0, 0.8);
+            margin-top: 20px;
         }
 
         button {
@@ -47,8 +48,6 @@
             font-size: 35px;
             width: 250px;
             height: 75px;
-            margin-top: -70px;
-            margin-bottom: 30px;
         }
 
         .pause { 
@@ -65,33 +64,152 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            position: relative;
+            justify-content: space-evenly;
+            gap: 15px;
+            margin-top: 15px;
         }
         
+        .boardDiv {
+            position: absolute;
+            top: 285px; 
+            left: 50%;
+            transform: translateX(-50%);
+        }   
+
         h2 {
             color: #02a7d9;
-            font-size: 35px;
-            margin-top: 10px;
-            margin-bottom: 10px;
+            color: #d2e1fa;
+            font-size: 30px;
+            text-align: center;
         }
 
         p {
             color: #d2e1fa;
             font-size: 30px;
-            margin-top: 20px;
-            padding-bottom: 100px;
+            line-height: 0.7;
             text-align: center;
         }   
+
+        span {
+            color: #d2e1fa;
+            font-size: 30px;
+            text-align: center;
+        }
+
+
+        .difficulty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .difficultyButtons {
+            display: flex;
+            flex-direction: row;
+            align-items: space-between;
+            justify-content: center;
+        }
+
+        .diffOptions {
+            display: flex;
+            flex-direction: row-reverse;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .easy, .medium, .hard {
+            font-size: 30px;
+            width: 150px;
+            height: 60px;
+            border: 0;
+            border-radius: 20px;
+            color: #d2e1fa;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            margin: 10px;
+        }
+
+        .easy {
+            background-color: #34eb77;
+        }
+
+        .easy:hover {
+            background-color: #1d8f46;
+        }
+
+        .medium {
+            background-color: #f2ab3f;
+        }
+
+        .medium:hover {
+            background-color: #b57f2d;
+        }
+
+        .hard {
+            background-color: #ff2929;
+        }
+
+        .hard:hover {
+            background-color: #ba1e1e;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column; 
+            align-items: flex-start;
+            justify-content: center;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .infoSettings {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: 400px;
+            overflow: visible;
+        }
+
+        .sizeControl {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .sizeButtons {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sizeBtn {
+            width: 50px;
+            height: 50px;
+            font-size: 30px;
+            border-radius: 10px;
+            border: 0;
+            background-color: #4797ff;
+            color: #d2e1fa;
+            margin: 0;
+        }
+
     </style>
     <div id="root"></div>
     <script type="text/babel">
         const root = ReactDOM.createRoot(document.getElementById('root'))
-        const size = 15;
         const pixels = 40;
 
         const Point = ({ x, y }) => {
             const style = {
-                backgroundColor: "blue",
+                backgroundColor: "green",
                 width: "100%",
                 height: "100%",
                 gridColumn: x,
@@ -116,7 +234,7 @@
             return( <h2>Current high score: {points}</h2> )
         }
 
-        const PauseScreen = () => {
+        const PauseScreen = ({ size }) => {
             const style = {
                 display: "flex",
                 border: "8px solid #4797ff",
@@ -131,7 +249,7 @@
             return (<main className='pause' style={style}/>)
         }
 
-        const DeathScreen = () => {
+        const DeathScreen = ({ size }) => {
             const style = {
                 display: "flex",
                 border: "8px solid #4797ff",
@@ -146,13 +264,30 @@
             return (<main className='death' style={style}/>)
         }
 
+        const WinScreen = ({ size }) => {
+            const style = {
+                display: "flex",
+                border: "8px solid #4797ff",
+                backgroundImage: 'url("./assets/win.webp")',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                borderRadius: "20px",
+                width: `${size*pixels}px`,
+                height: `${size*pixels}px`
+            }
 
-        const Board = ({ children }) => {
+            return (<main className='win' style={style}/>)
+        }
+
+        const Board = ({ size, children }) => {
             const boardStyle =  {
                 display: "grid",
                 border: '8px solid #4797ff',
-                backgroundImage: 'url("./assets/grass.jpg")',
                 borderRadius: '20px',
+                background: `
+                    linear-gradient(45deg, #1a3a5c 25%, transparent 25%, transparent 75%, #1a3a5c 75%), linear-gradient(45deg, #1a3a5c 25%, transparent 25%, transparent 75%, #1a3a5c 75%), #00224d`,
+                backgroundSize: `${pixels*2}px ${pixels*2}px`,
+                backgroundPosition: `0 0, ${pixels}px ${pixels}px`,
                 gridTemplateColumns: `repeat(${size}, ${pixels}px)`,
                 gridTemplateRows: `repeat(${size}, ${pixels}px)`,
                 width: `${size*pixels}px`,
@@ -160,6 +295,32 @@
             }
 
             return (<main className='board' style={boardStyle}>{children}</main>)
+        }
+
+        const Size = ({ size, setSize }) => {
+            return (
+                <div className="sizeControl">
+                    <h2>Board Size</h2>
+                    <div className="sizeButtons">
+                        <button className="sizeBtn" onClick={() => {setSize(s => Math.max(4, s - 1)); generateBoard()}}>-</button>
+                        <span>{size}x{size}</span>
+                        <button className="sizeBtn" onClick={() => {setSize(s => Math.min(13, s + 1)); generateBoard()}}>+</button>
+                    </div>
+                </div>
+            )
+        }
+
+        const Difficulty = ({diff, setSpeed, setDiff}) => {
+            return (
+                <div className="difficulty">
+                    <h2>Current Difficulty: {diff}</h2>
+                    <div className="difficultyButtons">
+                        <button className="easy" onClick={() => {setSpeed(500); setDiff('Easy')}}>Easy</button>
+                        <button className="medium" onClick={() => {setSpeed(250); setDiff('Medium')}}>Medium</button>
+                        <button className="hard" onClick={() => {setSpeed(100); setDiff('Hard')}}>Hard</button>
+                    </div>
+                </div>
+            )
         }
         
         const Game = () => {
@@ -171,10 +332,14 @@
             const [prevHighScore, setPrevHighScore] = React.useState(0)
             const [highScore, setHighScore] = React.useState(0)
             const [gameState, setGameState] = React.useState('InitialLoad')
-            const [speed, setSpeed] = React.useState(400)
+            const [speed, setSpeed] = React.useState(500)
+            const [diff, setDiff] = React.useState('Easy')
+            const [size, setSize] = React.useState(10)
 
             const generateBoard = () => {
-                updateSnake([{x:4, y:5}, {x:3, y:5}, {x:2,y:5}])
+                const spawnPos = Math.floor(size/2)
+                const initSnake = [{x:3, y:spawnPos}, {x:2, y:spawnPos}, {x:1,y:spawnPos}]
+                updateSnake(initSnake)
 
                 let boardSpaces = []
                 for (let i = 0; i < size; i++) {
@@ -184,7 +349,7 @@
                 }
 
                 boardSpaces = boardSpaces.filter( (obj) => {
-                    for (const s of snake) {
+                    for (const s of initSnake) {
                         if (s.x === obj.x && s.y === obj.y) { return false }
                     }
                     return true
@@ -219,7 +384,7 @@
                                 (direction === 'ArrowDown' ) ? { x: head.x, y: head.y + 1 }:
                                                                { x: head.x, y: head.y - 1}
 
-                if (newHead.x > 15 || newHead.x < 1 || newHead.y > 15 || newHead.y < 1) { setGameState('Dead') }
+                if (newHead.x > size || newHead.x < 1 || newHead.y > size || newHead.y < 1) { setGameState('Dead'); setHighScore(0)}
                 let newSnake = []
                 let ateFood = false
                 
@@ -253,7 +418,7 @@
             }
 
             // effect sin nada ejecuta solo una vez on load
-            React.useEffect( () => { generateBoard() }, [])
+            React.useEffect( () => { setSize(10); generateBoard() }, [])
             
             React.useEffect(
                 () => {
@@ -282,9 +447,10 @@
                                 const newSnake = calculateSnake(snake)
                                 updateSnake(newSnake)
                                 const [h, ...body] = newSnake
-                                for (const s of body){ 
-                                    if (h.x === s.x && h.y === s.y) { setGameState('Dead') }; 
+                                for (const s of body){
+                                    if (h.x === s.x && h.y === s.y) { setGameState('Dead'); setHighScore(0) };
                                 }
+                                if (newSnake.length === size * size) { setGameState('Win') }
 
                                 if (highScore > prevHighScore) {
                                     setPrevHighScore(highScore)
@@ -293,36 +459,75 @@
 
                         return () => clearInterval(i)
                     }
-                }, [direction, food, snake]) 
+                }, [direction, food, snake, size])
 
                 return(
                 <div className="parent">
                     <h1>React-ive Snake</h1>
-                    <Score points={(highScore > prevHighScore) ? highScore : prevHighScore}/>
                     <p> Press the button below to begin your very own experience of the great Snake game made in React.<br/><br/>Use the arrow keys to move around! </p>
                     {
                         gameState === 'InitialLoad' ? (
                             <div id="mainArea">
+                                <Score points={(highScore > prevHighScore) ? highScore : prevHighScore}/>
+                                <div className="diffOptions">
+                                    <Difficulty diff={diff} setSpeed={setSpeed} setDiff={setDiff}/>
+                                    <Size size={size} setSize={setSize}/>
+                                </div>
                                 <button onClick={() => {setGameState('Alive'); setDirection('ArrowRight')}} className="start">Start Game!</button>
-                                <Board></Board>
+                                <div className="boardDiv">
+                                    <Board size={size}></Board>
+                                </div>
                             </div>
                         ) : gameState === 'Pause' ? (
                             <div id="mainArea">
+                                <Score points={(highScore > prevHighScore) ? highScore : prevHighScore}/>
+                                <div className="diffOptions">
+                                    <Difficulty diff={diff} setSpeed={setSpeed} setDiff={setDiff}/>
+                                    <Size size={size} setSize={setSize}/>
+                                </div>
                                 <button onClick={() => {setGameState('Alive'); setDirection(prevDirection)}} className="resume">Resume</button>
-                                <PauseScreen />
+                                <div className="boardDiv">
+                                    <PauseScreen size={size}/>
+                                </div>
                             </div>
                         ) : gameState === 'Dead' ? (
                             <div id="mainArea">
+                                <Score points={(highScore > prevHighScore) ? highScore : prevHighScore}/>
+                                <div className="diffOptions">
+                                    <Difficulty diff={diff} setSpeed={setSpeed} setDiff={setDiff}/>
+                                    <Size size={size} setSize={setSize}/>
+                                </div>
                                 <button onClick={() => { generateBoard(); setGameState('Alive'); setDirection('ArrowRight') }} className="start">Start</button>
-                                <DeathScreen />
+                                <div className="boardDiv">
+                                    <DeathScreen size={size}/>
+                                </div>
+                            </div>
+                        ) : gameState === 'Win' ? (
+                            <div id="mainArea">
+                                <Score points={(highScore > prevHighScore) ? highScore : prevHighScore}/>
+                                <div className="diffOptions">
+                                    <Difficulty diff={diff} setSpeed={setSpeed} setDiff={setDiff}/>
+                                    <Size size={size} setSize={setSize}/>
+                                </div>
+                                <button onClick={() => { generateBoard(); setGameState('Alive'); setDirection('ArrowRight') }} className="start">Play Again!</button>
+                                <div className="boardDiv">
+                                    <WinScreen size={size}/>
+                                </div>
                             </div>
                         ) : (
                             <div id="mainArea">
+                                <Score points={(highScore > prevHighScore) ? highScore : prevHighScore}/>
+                                <div className="diffOptions">
+                                    <Difficulty diff={diff} setSpeed={setSpeed} setDiff={setDiff}/>
+                                    <Size size={size} setSize={setSize}/>
+                                </div>
                                 <button onClick={() => {setGameState('Pause'); setPrevDirection(direction); setDirection('nil')}} className="pause">Pause</button>
-                                <Board>
-                                    {food.map((obj, i) => { return(<Food key={i} x={obj.x} y={obj.y}/>) })}
-                                    {snake.map((obj, i) => { return(<Point key={i} x={obj.x} y={obj.y}/>) })}
-                                </Board>
+                                <div className="boardDiv">
+                                    <Board size={size}>
+                                        {food.map((obj, i) => { return(<Food key={i} x={obj.x} y={obj.y}/>) })}
+                                        {snake.map((obj, i) => { return(<Point key={i} x={obj.x} y={obj.y}/>) })}
+                                    </Board>
+                                </div>
                             </div>
                         )
                     }
