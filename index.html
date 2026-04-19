@@ -335,6 +335,7 @@
             const [speed, setSpeed] = React.useState(500)
             const [diff, setDiff] = React.useState('Easy')
             const [size, setSize] = React.useState(10)
+            const [tick, setTick] = React.useState(0)
 
             const generateBoard = () => {
                 const spawnPos = Math.floor(size/2)
@@ -441,25 +442,24 @@
             React.useEffect(
                 () => {
                     if (gameState === 'Alive') {
-                        const i = setInterval(
-                            () => {
-
-                                const newSnake = calculateSnake(snake)
-                                updateSnake(newSnake)
-                                const [h, ...body] = newSnake
-                                for (const s of body){
-                                    if (h.x === s.x && h.y === s.y) { setGameState('Dead'); setHighScore(0) };
-                                }
-                                if (newSnake.length === size * size) { setGameState('Win') }
-
-                                if (highScore > prevHighScore) {
-                                    setPrevHighScore(highScore)
-                                }
-                            }, speed)
-
+                        const i = setInterval(() => setTick(t => t + 1), speed)
                         return () => clearInterval(i)
                     }
-                }, [direction, food, snake, size])
+                }, [gameState, speed])
+
+            React.useEffect(
+                () => {
+                    if (gameState === 'Alive' && tick > 0) {
+                        const newSnake = calculateSnake(snake)
+                        updateSnake(newSnake)
+                        const [h, ...body] = newSnake
+                        for (const s of body){
+                            if (h.x === s.x && h.y === s.y) { setGameState('Dead'); setHighScore(0) }
+                        }
+                        if (newSnake.length === size * size) { setGameState('Win') }
+                        if (highScore > prevHighScore) { setPrevHighScore(highScore) }
+                    }
+                }, [tick])
 
                 return(
                 <div className="parent">
